@@ -15,7 +15,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "db:setup": "pnpm prisma:generate && pnpm prisma:push && pnpm prisma:seed"
+    "db:setup": "pnpm prisma:generate && pnpm prisma:push && pnpm prisma:seed",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",
