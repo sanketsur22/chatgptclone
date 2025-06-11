@@ -2,38 +2,57 @@
 import { ChatInterface as ChatComponent } from "@/components/chat-interface";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { getCurrentUserId } from "@/lib/auth-utils";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth, useUser } from "@clerk/nextjs";
 
-export default function ChatPage() {
+function ChatPageContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const { userId } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const chatId = searchParams.get("id");
 
-  // Initialize the user ID
+  // Redirect if not authenticated
   useEffect(() => {
-    setUserId(getCurrentUserId());
-  }, []);
+    if (isLoaded && !isSignedIn) {
+      router.push("/");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   return (
     <div className="flex h-screen max-h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        userId={userId || undefined}
+        userId={userId || ""}
         currentChatId={chatId || undefined}
       />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <ChatComponent
-          chatId={chatId || undefined}
-          userId={userId || undefined}
-        />
+        <ChatComponent chatId={chatId || undefined} userId={userId || ""} />
       </div>
     </div>
   );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <ChatPageContent />
+    </Suspense>
+  );
+
+  // This code is now moved to ChatPageContent component
+  return null;
 }

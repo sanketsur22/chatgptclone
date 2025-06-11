@@ -10,11 +10,34 @@ import { prisma } from "./prisma";
 export async function getOrCreateUser(
   email: string,
   name?: string,
-  image?: string
+  image?: string,
+  id?: string
 ) {
   try {
-    // Try to find the user first
-    let user = await prisma.user.findUnique({
+    let user;
+
+    // If we have a Clerk ID, try to find the user by that first
+    if (id) {
+      user = await prisma.user.findUnique({
+        where: { id },
+      });
+
+      // If found, update any changed information
+      if (user) {
+        user = await prisma.user.update({
+          where: { id },
+          data: {
+            email,
+            name: name || user.name,
+            image: image || user.image,
+          },
+        });
+        return user;
+      }
+    }
+
+    // If no ID or user not found by ID, try email
+    user = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -22,6 +45,7 @@ export async function getOrCreateUser(
     if (!user) {
       user = await prisma.user.create({
         data: {
+          id: id || undefined, // Use Clerk ID if available
           email,
           name: name || email.split("@")[0],
           image: image || null,

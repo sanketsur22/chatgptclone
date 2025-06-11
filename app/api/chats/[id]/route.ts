@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 interface ChatParams {
   params: {
@@ -10,9 +11,20 @@ interface ChatParams {
 export async function GET(req: Request, { params }: ChatParams) {
   try {
     const { id } = params;
+    const { userId } = auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
 
     const chat = await prisma.chat.findUnique({
-      where: { id },
+      where: {
+        id,
+        userId, // Ensure the chat belongs to the authenticated user
+      },
       include: {
         messages: {
           orderBy: { createdAt: "asc" },

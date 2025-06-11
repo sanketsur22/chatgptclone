@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu, Sparkles, Plus } from "lucide-react";
+import { Menu, Sparkles, Plus, LogOut } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -10,12 +10,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { SignOutButton, useUser } from "@clerk/nextjs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { user } = useUser();
+
   const handleNewChat = () => {
     window.location.reload();
   };
@@ -63,6 +74,40 @@ export function Header({ onMenuClick }: HeaderProps) {
         </TooltipProvider>
 
         <ThemeToggle />
+
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full overflow-hidden"
+              >
+                <img
+                  src={user.imageUrl || "/placeholder-user.jpg"}
+                  alt={user.fullName || "User"}
+                  className="w-8 h-8 rounded-full"
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                {user.fullName || user.username || "Account"}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/account">Profile Settings</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <SignOutButton>
+                <DropdownMenuItem className="text-destructive cursor-pointer">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </SignOutButton>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </header>
   );

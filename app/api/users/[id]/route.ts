@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 interface UserParams {
   params: {
@@ -9,6 +10,16 @@ interface UserParams {
 
 export async function GET(req: Request, { params }: UserParams) {
   try {
+    const { userId } = await auth();
+
+    // Check if user is authenticated
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { id } = params;
 
     const user = await prisma.user.findUnique({
@@ -37,7 +48,25 @@ export async function GET(req: Request, { params }: UserParams) {
 
 export async function PUT(req: Request, { params }: UserParams) {
   try {
+    const { userId } = await auth();
+
+    // Check if user is authenticated
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
     const { id } = params;
+    // Only allow users to update their own profile
+    if (userId !== id) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only update your own profile" },
+        { status: 403 }
+      );
+    }
+
     const { name, image } = await req.json();
 
     const user = await prisma.user.update({

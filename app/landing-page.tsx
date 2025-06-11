@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  useAuth,
+} from "@clerk/nextjs";
+import {
   Sparkles,
   MessageSquare,
   Zap,
@@ -23,6 +30,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -210,12 +218,33 @@ export default function LandingPage() {
                 <Menu className="h-5 w-5" />
               )}
             </Button>
-            <Link href="/chat" className="hidden sm:block">
-              <Button>Get Started</Button>
-            </Link>
-            <Link href="/chat" className="sm:hidden">
-              <Button size="sm">Start</Button>
-            </Link>
+
+            <SignedOut>
+              <div className="hidden sm:flex items-center gap-2">
+                <SignInButton mode="modal">
+                  <Button variant="ghost">Sign In</Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button>Sign Up</Button>
+                </SignUpButton>
+              </div>
+              <div className="sm:hidden">
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </SignInButton>
+              </div>
+            </SignedOut>
+
+            <SignedIn>
+              <Link href="/chat" className="hidden sm:block">
+                <Button>Dashboard</Button>
+              </Link>
+              <Link href="/chat" className="sm:hidden">
+                <Button size="sm">Dashboard</Button>
+              </Link>
+            </SignedIn>
           </div>
         </div>
 
@@ -224,6 +253,13 @@ export default function LandingPage() {
           <div className="md:hidden bg-background border-b border-border">
             <div className="container mx-auto px-4 py-3">
               <nav className="flex flex-col space-y-3">
+                <SignedOut>
+                  <div className="flex flex-col space-y-2 pb-2">
+                    <SignUpButton mode="modal">
+                      <Button className="w-full">Sign Up</Button>
+                    </SignUpButton>
+                  </div>
+                </SignedOut>
                 <Link
                   href="#features"
                   className="text-muted-foreground hover:text-foreground transition-colors py-2"
@@ -269,12 +305,24 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/chat">
-              <Button size="lg" className="text-lg px-8">
-                Start Chatting Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <SignedIn>
+              <Link href="/chat">
+                <Button size="lg" className="text-lg px-8">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </SignedIn>
+
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <Button size="lg" className="text-lg px-8">
+                  Start Chatting Now
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+
             <Button size="lg" variant="outline" className="text-lg px-8">
               Watch Demo
             </Button>
@@ -430,14 +478,26 @@ export default function LandingPage() {
                     ))}
                   </ul>
 
-                  <Link href="/chat">
-                    <Button
-                      className="w-full"
-                      variant={plan.popular ? "default" : "outline"}
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
+                  <SignedIn>
+                    <Link href="/chat">
+                      <Button
+                        className="w-full"
+                        variant={plan.popular ? "default" : "outline"}
+                      >
+                        Go to Dashboard
+                      </Button>
+                    </Link>
+                  </SignedIn>
+                  <SignedOut>
+                    <SignUpButton mode="modal">
+                      <Button
+                        className="w-full"
+                        variant={plan.popular ? "default" : "outline"}
+                      >
+                        Get Started
+                      </Button>
+                    </SignUpButton>
+                  </SignedOut>
                 </CardContent>
               </Card>
             ))}
@@ -456,12 +516,22 @@ export default function LandingPage() {
               Join thousands of users who are already experiencing the future of
               AI assistance.
             </p>
-            <Link href="/chat">
-              <Button size="lg" className="text-lg px-8">
-                Start Your Free Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+            <SignedIn>
+              <Link href="/chat">
+                <Button size="lg" className="text-lg px-8">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </SignedIn>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <Button size="lg" className="text-lg px-8">
+                  Start Your Free Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </SignUpButton>
+            </SignedOut>
           </div>
         </div>
       </section>

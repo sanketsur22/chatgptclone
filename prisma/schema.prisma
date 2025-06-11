@@ -14,10 +14,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @map("_id") // Using Clerk's user ID directly
   email     String   @unique
   name      String?
   image     String?
+  username  String?
+  firstName String?
+  lastName  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   chats     Chat[]
@@ -28,7 +31,7 @@ model Chat {
   title     String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  userId    String    @db.ObjectId
+  userId    String    // Using Clerk's user ID directly
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
 

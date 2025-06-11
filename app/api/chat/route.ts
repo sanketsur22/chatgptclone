@@ -1,7 +1,8 @@
-import { generateText } from "ai";
+import { StreamingTextResponse } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { prisma } from "@/lib/prisma";
 import { Message } from "@/lib/types";
+import { auth } from "@clerk/nextjs/server";
 
 interface ChatRequest {
   messages: { role: string; content: string }[];
@@ -11,7 +12,18 @@ interface ChatRequest {
 
 export async function POST(req: Request) {
   try {
-    const { messages, userId, chatId }: ChatRequest = await req.json();
+    const { messages, chatId }: ChatRequest = await req.json();
+    const { userId } = await auth();
+
+    // Check if user is authenticated
+    if (!userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized. Please sign in.",
+        }),
+        { status: 401 }
+      );
+    }
 
     // Make sure OPENAI_API_KEY environment variable is set
     if (!process.env.OPENAI_API_KEY) {
@@ -47,13 +59,15 @@ export async function POST(req: Request) {
     }
 
     // Generate response from OpenAI
-    const { result } = await generateText({
-      model: openai("o3-mini"),
-      // system: "You are a friendly assistant!",
+    const response = openai.completion("o3-mini", {
       messages: messages,
+      stream: true,
     });
+    
+    // The response is already a stream
+    const stream = response;
 
-    // If we have a valid chat, save the user message and the assistant's response
+    // If we have a valid chat, save the user message
     if (chat) {
       // Save user message
       await prisma.message.create({
@@ -64,23 +78,12 @@ export async function POST(req: Request) {
         },
       });
 
-      // We'll save the assistant's response after we get it
-      result.onTextContent((content: string) => {
-        prisma.message
-          .create({
-            data: {
-              content: content,
-              role: "assistant",
-              chatId: chat.id,
-            },
-          })
-          .catch((error: Error) =>
-            console.error("Error saving assistant message:", error)
-          );
-      });
+      // For saving the assistant's response, we'd need another approach
+      // with the StreamingTextResponse, as it doesn't offer onTextContent
     }
 
-    return result.toDataStreamResponse();
+    // Return a streaming response
+    return new StreamingTextResponse(stream);
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(

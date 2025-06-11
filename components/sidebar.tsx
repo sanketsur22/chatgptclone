@@ -9,7 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { MessageSquare, Plus, Settings, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, Settings, Trash2, LogOut } from "lucide-react";
+import { useUser, SignOutButton } from "@clerk/nextjs";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 
@@ -33,6 +34,7 @@ export function Sidebar({
   userId,
   currentChatId,
 }: SidebarProps) {
+  const { user } = useUser();
   const [conversations, setConversations] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -134,9 +136,13 @@ export function Sidebar({
         <Separator />
 
         <div className="p-4 space-y-2">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button
+            variant="ghost"
+            className="w-full justify-start"
+            onClick={() => (window.location.href = "/account")}
+          >
             <Settings className="mr-2 h-4 w-4" />
-            Settings
+            Account Settings
           </Button>
           <Button
             variant="ghost"
@@ -145,6 +151,13 @@ export function Sidebar({
             <Trash2 className="mr-2 h-4 w-4" />
             Clear Conversations
           </Button>
+
+          <SignOutButton>
+            <Button variant="ghost" className="w-full justify-start mt-4">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </SignOutButton>
         </div>
       </div>
 
@@ -154,6 +167,31 @@ export function Sidebar({
           <SheetHeader className="p-4">
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
+
+          {/* User Profile */}
+          {user && (
+            <div className="px-4 py-2 flex items-center space-x-3 mb-2">
+              {user.imageUrl ? (
+                <img
+                  src={user.imageUrl}
+                  alt={user.fullName || "User"}
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium">
+                  {user.firstName?.[0] || user.username?.[0] || "U"}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">
+                  {user.fullName || user.username || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.primaryEmailAddress?.emailAddress}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="p-4">
             <Button

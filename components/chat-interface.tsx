@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@clerk/nextjs";
 import {
   Send,
   Bot,
@@ -35,6 +36,7 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ chatId, userId }: ChatInterfaceProps) {
+  const { user } = useUser();
   const {
     messages,
     input,
@@ -524,9 +526,17 @@ export function ChatInterface({ chatId, userId }: ChatInterfaceProps) {
 
               {message.role === "user" && (
                 <Avatar className="w-8 h-8 bg-primary flex-shrink-0">
-                  <AvatarFallback>
-                    <User className="w-4 h-4 text-primary-foreground" />
-                  </AvatarFallback>
+                  {user?.imageUrl ? (
+                    <img
+                      src={user.imageUrl}
+                      alt={user.fullName || "User"}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      <User className="w-4 h-4 text-primary-foreground" />
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               )}
             </div>

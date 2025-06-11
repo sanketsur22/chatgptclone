@@ -1,18 +1,45 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 // Route for user operations
 export async function POST(req: Request) {
   try {
-    const { email, name, image } = await req.json();
+    const session = await auth();
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    // Check if user is authenticated
+    if (!session.userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
+
+    // Get user details from Clerk
+    const clerkUser = await currentUser();
+
+    if (
+      !clerkUser ||
+      !clerkUser.emailAddresses ||
+      clerkUser.emailAddresses.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "User email not available" },
+        { status: 400 }
+      );
+    }
+
+    const email = clerkUser.emailAddresses[0].emailAddress;
+    const name =
+      clerkUser.firstName && clerkUser.lastName
+        ? `${clerkUser.firstName} ${clerkUser.lastName}`
+        : clerkUser.username || email.split("@")[0];
+    const image = clerkUser.imageUrl;
+    const userId = session.userId;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { id: userId },
     });
 
     if (existingUser) {
@@ -20,15 +47,16 @@ export async function POST(req: Request) {
     }
 
     // Create new user
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
+        id: userId,
         email,
-        name: name || email.split("@")[0],
-        image: image || null,
+        name,
+        image,
       },
     });
 
-    return NextResponse.json(user);
+    return NextResponse.json(newUser);
   } catch (error) {
     console.error("User API error:", error);
     return NextResponse.json(
@@ -38,18 +66,22 @@ export async function POST(req: Request) {
   }
 }
 
-// Get user by email
+// Get user data
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
+    const session = await auth();
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    // Check if user is authenticated
+    if (!session.userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
 
+    // Find the user in our database using Clerk's user ID
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { id: session.userId },
       include: {
         chats: {
           orderBy: { updatedAt: "desc" },
@@ -59,7 +91,39 @@ export async function GET(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      // If the user doesn't exist in our database yet, create them
+      const clerkUser = await currentUser();
+
+      if (
+        !clerkUser ||
+        !clerkUser.emailAddresses ||
+        clerkUser.emailAddresses.length === 0
+      ) {
+        return NextResponse.json(
+          { error: "User email not available" },
+          { status: 400 }
+        );
+      }
+
+      const email = clerkUser.emailAddresses[0].emailAddress;
+      const name =
+        clerkUser.firstName && clerkUser.lastName
+          ? `${clerkUser.firstName} ${clerkUser.lastName}`
+          : clerkUser.username || email.split("@")[0];
+
+      const newUser = await prisma.user.create({
+        data: {
+          id: session.userId,
+          email,
+          name,
+          image: clerkUser.imageUrl,
+        },
+        include: {
+          chats: true,
+        },
+      });
+
+      return NextResponse.json(newUser);
     }
 
     return NextResponse.json(user);

@@ -1,15 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const { userId } = await auth();
 
+    // Check if user is authenticated
     if (!userId) {
       return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
+        { error: "Authentication required" },
+        { status: 401 }
       );
     }
 
@@ -36,12 +37,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const { userId, title } = await req.json();
+    const { title } = await req.json();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
+        { error: "Authentication required" },
+        { status: 401 }
       );
     }
 
