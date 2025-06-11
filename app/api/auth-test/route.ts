@@ -1,11 +1,10 @@
 // API route to test Clerk authentication
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { currentUser } from "@clerk/nextjs";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export async function GET(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
 
     // Check if user is authenticated
     if (!userId) {

@@ -1,5 +1,5 @@
 import type React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -24,13 +24,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  ),
   title: "ChatGPT Clone - AI Assistant",
   description:
     "A modern ChatGPT clone built with Next.js, TypeScript, and OpenAI",
   keywords: ["ChatGPT", "AI", "Assistant", "OpenAI", "Next.js"],
   authors: [{ name: "ChatGPT Clone" }],
-  viewport: "width=device-width, initial-scale=1",
   generator: "v0.dev",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

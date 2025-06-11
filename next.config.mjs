@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['@ai-sdk/openai'],
-  },
+  serverExternalPackages: ['@ai-sdk/openai'],
   env: {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
@@ -15,6 +13,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone'
 }
 
 export default nextConfig
